@@ -34,7 +34,9 @@ window.onload = function () {
             FB.api(acs, function (response) {
                 var posts = response.data;
                 for (var i = 0; i < posts.length; i += 1) {
-                    post_elem.appendChild("<div>" + posts[i].message + "</div>");
+                    var messageDiv = document.createElement("div");
+                    messageDiv.innerHTML = posts[i].message;
+                    post_elem.appendChild(messageDiv);
                 }
             });
         }
