@@ -1,4 +1,8 @@
-var acs = '/259914077434319';
+var app_options = {
+    "scope": 'user_groups'
+}
+
+var acs = '/259914077434319/feed';
 
 window.fbAsyncInit = function() {
     FB.init({
@@ -16,24 +20,22 @@ window.fbAsyncInit = function() {
     fjs.parentNode.insertBefore(js, fjs);
  }(document, 'script', 'facebook-jssdk'));
 
-function getGroup() {
-    FB.api(acs, function (response) {
-        console.log(response);
-    });
-}
-
 window.onload = function () {
     var loggedIn = false;
     FB.login(function (response) {
         if (response.authResponse) {
             loggedIn = true;
             FB.api("/me", function (response) {
-                alert("Hi, " + response.name + ".");
+                console.log("Hi, " + response.name + ".");
+            });
+
+            // Loop through group feed
+            FB.api(acs, function (response) {
+                console.log(response);
+                for (var i = 0; i < response.length; i += 1) {
+                    console.log(JSON.stringify(response[i], null, "    "));
+                }
             });
         }
-    });
-
-    if (loggedIn == true) {
-        getGroup();
-    }
+    }, app_options);
 };
