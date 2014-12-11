@@ -4,7 +4,7 @@ window.fbAsyncInit = function() {
     FB.init({
         appId      : '1517733728513665',
         xfbml      : false,
-        version    : 'v2.2'
+        version    : 'v2.1'
     });
 };
 
@@ -23,15 +23,17 @@ function getGroup() {
 }
 
 window.onload = function () {
+    var loggedIn = false;
     FB.login(function (response) {
         if (response.authResponse) {
-            console.log("Logged in.");
+            loggedIn = true;
             FB.api("/me", function (response) {
-                console.log("Hi, " + response.name + ".");
+                alert("Hi, " + response.name + ".");
             });
-        } else {
-            console.log("Some error.");
         }
     });
-    // getGroup();
+
+    if (loggedIn == true) {
+        getGroup();
+    }
 };
