@@ -26,12 +26,16 @@ window.fbAsyncInit = function() {
     fjs.parentNode.insertBefore(js, fjs);
  }(document, "script", "facebook-jssdk"));
 
-function addToTotal(dict, user, field, amount) {
-    if (! dict[user]) {
-        dict[user][field] = amount;
-    } else {
-        dict[user][field] += amount;
+function addToTotal(dict, id, field, amount) {
+    if (! (id in dict)) {
+        dict[id] = {};
     }
+
+    if (! (field in dict[id])) {
+        dict[id][field] = 0;
+    }
+
+    dict[id][field] += amount;
 }
 
 window.onload = function () {
@@ -41,32 +45,40 @@ window.onload = function () {
                 console.log("Hi, " + response.name + ".");
             });
 
-            var users = {};
             // Loop through posts
             FB.api(acs, function (response) {
+                var users = {};
+
                 var posts = response.data;
                 for (var i = 0; i < posts.length; i += 1) {
                     var post = posts[i];
                     var user = post.from.id;
 
                     addToTotal(users, user, "post", weights.post);
-                    var l = post.likes.length * weights.like;
-                    addToTotal(users, user, "like", l);
-
-                    // Loop through comments
-                    var comments = post.comments.data;
-                    for (i = 0; i < comments.length; i += 1) {
-                        var comment = comments[i];
-                        var user = comment.from.id;
-
-                        addToTotal(users, user, "comment", weights.comment);
-                        var l = comment.likes.length * weights.like;
+                    if (post.likes) {
+                        var l = post.likes.length * weights.like;
                         addToTotal(users, user, "like", l);
                     }
+
+                    // Loop through comments
+                    if (post.comments) {
+                        var comments = post.comments.data;
+                        for (var j = 0; j < comments.length; j += 1) {
+                            var comment = comments[j];
+                            var user = comment.from.id;
+
+                            addToTotal(users, user, "comment", weights.comment);
+                            if (comment.likes) {
+                                var l = comment.likes.length * weights.like;
+                                addToTotal(users, user, "like", l);
+                            }
+                        }
+                    }
                 }
+
+                console.log(JSON.stringify(users, null, "    "));
             });
 
-            console.log(JSON.stringify(users, null, "    "));
         }
     }, app_options);
 };
