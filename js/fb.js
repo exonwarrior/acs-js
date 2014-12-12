@@ -1,15 +1,4 @@
-var app_options = {
-    "scope": "user_groups"
-}
-
-var acs = "/259914077434319/feed?limit=5000&since=1 week ago";
-
-weights = {
-    "like": 3,
-    "post": 2,
-    "comment": 1
-}
-
+// Initialise Facebook object
 window.fbAsyncInit = function() {
     FB.init({
         appId      : "1517733728513665",
@@ -25,6 +14,18 @@ window.fbAsyncInit = function() {
     js.src = "http://connect.facebook.net/en_US/sdk.js";
     fjs.parentNode.insertBefore(js, fjs);
  }(document, "script", "facebook-jssdk"));
+
+// Set up options
+var acs = "/259914077434319/feed?limit=5000&since=1 week ago&until=now";
+var app_options = {
+    "scope": "user_groups"
+}
+
+weights = {
+    "like": 3,
+    "post": 2,
+    "comment": 1
+}
 
 function addToTotal(dict, id, field, amount) {
     if (! (id in dict)) {
@@ -52,7 +53,7 @@ window.onload = function () {
                 var posts = response.data;
                 for (var i = 0; i < posts.length; i += 1) {
                     var post = posts[i];
-                    var user = post.from.id;
+                    var user = post.from.name;
 
                     addToTotal(users, user, "post", weights.post);
                     if (post.likes) {
@@ -65,7 +66,7 @@ window.onload = function () {
                         var comments = post.comments.data;
                         for (var j = 0; j < comments.length; j += 1) {
                             var comment = comments[j];
-                            var user = comment.from.id;
+                            var user = comment.from.name;
 
                             addToTotal(users, user, "comment", weights.comment);
                             if (comment.likes) {
