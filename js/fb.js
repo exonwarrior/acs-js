@@ -24,9 +24,11 @@ function get_score (comments, likes, posts) {
         "comment": 1
     };
 
-    return ((likes * weights.like) -
-            ((comments * weights.comment) +
-             (posts * weights.post)));
+    var c = (comments || 0) * weights.comment;
+    var l = (likes || 0) * weights.like;
+    var p = (posts || 0) * weights.post;
+
+    return (c + l + p);
 }
 
 function make_user_list(metrics) {
@@ -34,11 +36,11 @@ function make_user_list(metrics) {
     for (var _id in metrics) {
         var u = metrics[_id];
         var s = get_score(u.comment, u.like, u.post);
-        users.append([u, s]);
+        users.push([_id, s]);
     }
 
     users.sort(function (u, s) {
-        return u[1] - s[1];
+        return s[1] - u[1];
     });
 
     return users;
@@ -56,9 +58,31 @@ function add_to_count(dict, id, field) {
     dict[id][field] += 1;
 }
 
-function render_leaderboard(sorted_user_list) {
+function render_leaderboard(sorted_users) {
+    // Add list items to main panel
     document.getElementById("posts").innerHTML = "";
-    console.log(JSON.stringify(sorted_user_list, null, "    "));
+    var ul = document.createElement("ul");
+    ul.id = "score_list";
+    document.getElementById("posts").appendChild(ul);
+
+    // Append nodes
+    for (var i = 0; i < sorted_users.length; i += 1) {
+        var name = sorted_users[i][0];
+        var score = sorted_users[i][1];
+
+        var li = document.createElement("li");
+
+        var na = document.createTextNode(name);
+        li.appendChild(na);
+
+        var s = document.createElement("b");
+        s.style.cssFloat = "right";
+        var sc = document.createTextNode(score);
+        s.appendChild(sc);
+        li.appendChild(s);
+
+        document.getElementById("score_list").appendChild(li);
+    }
 }
 
 function ACS() {
@@ -67,12 +91,12 @@ function ACS() {
         "scope": "user_groups"
     };
 
-    var sorted = [];
-    var users = {};
     FB.login(function (response) {
         if (response.authResponse) {
             // Loop through posts
             FB.api(acs, function (response) {
+                var users = {};
+
                 var l, user;
                 var posts = response.data;
                 for (var i = 0; i < posts.length; i += 1) {
@@ -100,12 +124,10 @@ function ACS() {
                         }
                     }
                 }
-            });
 
-            // Render the HTML list!
-            var users_sorted = make_user_list(users);
-            render_leaderboard(users_sorted);
+                var users_sorted = make_user_list(users);
+                render_leaderboard(users_sorted);
+            });
         }
     }, app_options);
 }
-
