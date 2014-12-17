@@ -1,11 +1,31 @@
 /*jslint browser: true*/
 /*global FB*/
 window.fbAsyncInit = function() {
-    FB.init({
-        appId      : "1517733728513665",
-        xfbml      : false,
-        version    : "v2.1"
-    });
+    try {
+        FB.init({
+            appId      : "1517733728513665",
+            xfbml      : false,
+            version    : "v2.1"
+        });
+
+        FB.getLoginStatus(function (response) {
+            if (response.status == "connected") {
+                get_metrics();
+            } else {
+                document.getElementById("info_text").innerHTML = (
+                    "<h3 class=\"buffer\">You're not logged in :(</h3>" +
+                    "<button type=\"button\" onclick=\"javascript:login()\">" +
+                    "Authorise with Facebook</button>"
+                );
+            }
+        });
+    } catch (err) {
+        window.setTimeout(2000, function () {
+            document.getElementById("status").innerHTML = (
+                "Couldn't load Facebook API. :("
+            );
+        });
+    }
 };
 
 (function(d, s, id){
@@ -28,7 +48,7 @@ function get_score (comments, likes, posts) {
     var l = (likes || 0) * weights.like;
     var p = (posts || 0) * weights.post;
 
-    return (c + l + p);
+    return (l - (c + p));
 }
 
 function make_user_list(metrics) {
@@ -46,16 +66,16 @@ function make_user_list(metrics) {
     return users;
 }
 
-function add_to_count(dict, id, field) {
-    if (! (dict.hasOwnProperty(id))) {
+function add_to_count(dict, id, field, amount) {
+    if (! (id in dict)) {
         dict[id] = {};
     }
 
-    if (! (dict[id].hasOwnProperty(field))) {
+    if (! (field in dict[id])) {
         dict[id][field] = 0;
     }
 
-    dict[id][field] += 1;
+    dict[id][field] += amount;
 }
 
 function render_leaderboard(sorted_users) {
@@ -85,49 +105,53 @@ function render_leaderboard(sorted_users) {
     }
 }
 
-function ACS() {
-    var acs = "/259914077434319/feed?limit=5000&since=7 days ago&until=now";
+function get_metrics () {
+    var acs = "/259914077434319/feed?limit=5000&since=3%20days%20ago&until=now";
     var app_options = {
         "scope": "user_groups"
     };
 
-    FB.login(function (response) {
-        if (response.authResponse) {
-            // Loop through posts
-            FB.api(acs, function (response) {
-                var users = {};
+    // Loop through posts
+    FB.api(acs, function (response) {
+        var users = {};
 
-                var l, user;
-                var posts = response.data;
-                for (var i = 0; i < posts.length; i += 1) {
-                    var post = posts[i];
-                    user = post.from.name;
+        var l, user;
+        var posts = response.data;
+        for (var i = 0; i < posts.length; i += 1) {
+            var post = posts[i];
+            user = post.from.name;
 
-                    add_to_count(users, user, "post");
-                    if (post.likes) {
-                        l = post.likes.data.length;
+            add_to_count(users, user, "post", 1);
+            if (post.likes) {
+                l = post.likes.data.length;
+                add_to_count(users, user, "like", l);
+            }
+
+            // Loop through comments
+            if (post.comments) {
+                var comments = post.comments.data;
+                for (var j = 0; j < comments.length; j += 1) {
+                    var comment = comments[j];
+
+                    user = comment.from.name;
+                    add_to_count(users, user, "comment", 1);
+                    if (comment.likes) {
+                        l = comment.like_count;
                         add_to_count(users, user, "like", l);
                     }
-
-                    // Loop through comments
-                    if (post.comments) {
-                        var comments = post.comments.data;
-                        for (var j = 0; j < comments.length; j += 1) {
-                            var comment = comments[j];
-
-                            user = comment.from.name;
-                            add_to_count(users, user, "comment");
-                            if (comment.likes) {
-                                l = comment.like_count;
-                                add_to_count(users, user, "like", l);
-                            }
-                        }
-                    }
                 }
-
-                var users_sorted = make_user_list(users);
-                render_leaderboard(users_sorted);
-            });
+            }
         }
-    }, app_options);
+
+        var users_sorted = make_user_list(users);
+        render_leaderboard(users_sorted);
+    });
+}
+
+function login() {
+    FB.login(function (response) {
+        if (response.authResponse) {
+            get_metrics();
+        }
+    });
 }
