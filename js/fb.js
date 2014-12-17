@@ -58,7 +58,7 @@ window.onload = function () {
 
                     addToTotal(users, user, "post", weights.post);
                     if (post.likes) {
-                        l = post.likes.length * weights.like;
+                        l = post.likes.data.length * weights.like;
                         addToTotal(users, user, "like", l);
                     }
 
@@ -67,11 +67,11 @@ window.onload = function () {
                         var comments = post.comments.data;
                         for (var j = 0; j < comments.length; j += 1) {
                             var comment = comments[j];
-                            user = comment.from.name;
 
+                            user = comment.from.name;
                             addToTotal(users, user, "comment", weights.comment);
                             if (comment.likes) {
-                                l = comment.likes.length * weights.like;
+                                l = comment.like_count * weights.like;
                                 addToTotal(users, user, "like", l);
                             }
                         }
