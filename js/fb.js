@@ -48,16 +48,17 @@ window.onload = function () {
 
             // Loop through posts
             FB.api(acs, function (response) {
+                var l, user;
                 var users = {};
 
                 var posts = response.data;
                 for (var i = 0; i < posts.length; i += 1) {
                     var post = posts[i];
-                    var user = post.from.name;
+                    user = post.from.name;
 
                     addToTotal(users, user, "post", weights.post);
                     if (post.likes) {
-                        var l = post.likes.length * weights.like;
+                        l = post.likes.length * weights.like;
                         addToTotal(users, user, "like", l);
                     }
 
@@ -66,11 +67,11 @@ window.onload = function () {
                         var comments = post.comments.data;
                         for (var j = 0; j < comments.length; j += 1) {
                             var comment = comments[j];
-                            var user = comment.from.name;
+                            user = comment.from.name;
 
                             addToTotal(users, user, "comment", weights.comment);
                             if (comment.likes) {
-                                var l = comment.likes.length * weights.like;
+                                l = comment.likes.length * weights.like;
                                 addToTotal(users, user, "like", l);
                             }
                         }
