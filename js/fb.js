@@ -1,4 +1,5 @@
-// Initialise Facebook object
+/*jslint browser: true*/
+/*global FB*/
 window.fbAsyncInit = function() {
     FB.init({
         appId      : "1517733728513665",
@@ -15,51 +16,73 @@ window.fbAsyncInit = function() {
     fjs.parentNode.insertBefore(js, fjs);
  }(document, "script", "facebook-jssdk"));
 
-// Set up options
-var acs = "/259914077434319/feed?limit=5000&since=1 week ago&until=now";
-var app_options = {
-    "scope": "user_groups"
+// Calculate a 'score' based on likes/comments/posts
+function get_score (comments, likes, posts) {
+    var weights = {
+        "like": 3,
+        "post": 2,
+        "comment": 1
+    };
+
+    return ((likes * weights.like) -
+            ((comments * weights.comment) +
+             (posts * weights.post)));
 }
 
-weights = {
-    "like": 3,
-    "post": 2,
-    "comment": 1
+function make_user_list(metrics) {
+    var users = [];
+    for (var _id in metrics) {
+        var u = metrics[_id];
+        var s = get_score(u.comment, u.like, u.post);
+        users.append([u, s]);
+    }
+
+    users.sort(function (u, s) {
+        return u[1] - s[1];
+    });
+
+    return users;
 }
 
-function addToTotal(dict, id, field, amount) {
-    if (! (id in dict)) {
+function add_to_count(dict, id, field) {
+    if (! (dict.hasOwnProperty(id))) {
         dict[id] = {};
     }
 
-    if (! (field in dict[id])) {
+    if (! (dict[id].hasOwnProperty(field))) {
         dict[id][field] = 0;
     }
 
-    dict[id][field] += amount;
+    dict[id][field] += 1;
 }
 
-window.onload = function () {
+function render_leaderboard(sorted_user_list) {
+    document.getElementById("posts").innerHTML = "";
+    console.log(JSON.stringify(sorted_user_list, null, "    "));
+}
+
+function ACS() {
+    var acs = "/259914077434319/feed?limit=5000&since=7 days ago&until=now";
+    var app_options = {
+        "scope": "user_groups"
+    };
+
+    var sorted = [];
+    var users = {};
     FB.login(function (response) {
         if (response.authResponse) {
-            FB.api("/me", function (response) {
-                console.log("Hi, " + response.name + ".");
-            });
-
             // Loop through posts
             FB.api(acs, function (response) {
                 var l, user;
-                var users = {};
-
                 var posts = response.data;
                 for (var i = 0; i < posts.length; i += 1) {
                     var post = posts[i];
                     user = post.from.name;
 
-                    addToTotal(users, user, "post", weights.post);
+                    add_to_count(users, user, "post");
                     if (post.likes) {
-                        l = post.likes.data.length * weights.like;
-                        addToTotal(users, user, "like", l);
+                        l = post.likes.data.length;
+                        add_to_count(users, user, "like", l);
                     }
 
                     // Loop through comments
@@ -69,18 +92,20 @@ window.onload = function () {
                             var comment = comments[j];
 
                             user = comment.from.name;
-                            addToTotal(users, user, "comment", weights.comment);
+                            add_to_count(users, user, "comment");
                             if (comment.likes) {
-                                l = comment.like_count * weights.like;
-                                addToTotal(users, user, "like", l);
+                                l = comment.like_count;
+                                add_to_count(users, user, "like", l);
                             }
                         }
                     }
                 }
-
-                console.log(JSON.stringify(users, null, "    "));
             });
 
+            // Render the HTML list!
+            var users_sorted = make_user_list(users);
+            render_leaderboard(users_sorted);
         }
     }, app_options);
-};
+}
+
