@@ -3,9 +3,9 @@
 window.fbAsyncInit = function() {
     try {
         FB.init({
-            appId      : "1517733728513665",
-            xfbml      : false,
-            version    : "v2.1"
+            appId: "1517733728513665",
+            xfbml: false,
+            version: "v2.1"
         });
 
         FB.getLoginStatus(function (response) {
@@ -32,7 +32,7 @@ window.fbAsyncInit = function() {
     var js, fjs = d.getElementsByTagName(s)[0];
     if (d.getElementById(id)) {return;}
     js = d.createElement(s); js.id = id;
-    js.src = "http://connect.facebook.net/en_US/sdk.js";
+    js.src = "https://connect.facebook.net/en_US/sdk.js";
     fjs.parentNode.insertBefore(js, fjs);
  }(document, "script", "facebook-jssdk"));
 
