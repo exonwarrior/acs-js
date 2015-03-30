@@ -5,7 +5,7 @@ window.fbAsyncInit = function() {
         FB.init({
             appId: "1517733728513665",
             xfbml: false,
-            version: "v2.1"
+            version: "v2.3"
         });
 
         FB.getLoginStatus(function (response) {
@@ -135,7 +135,7 @@ function get_metrics () {
 
                     user = comment.from.name;
                     add_to_count(users, user, "comment", 1);
-                    if (comment.likes) {
+                    if (comment.like_count) {
                         l = comment.like_count;
                         add_to_count(users, user, "like", l);
                     }
