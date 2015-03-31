@@ -106,7 +106,9 @@ function render_leaderboard(sorted_users) {
 }
 
 function get_metrics () {
-    var acs = "/259914077434319/feed?limit=5000&since=3%20days%20ago&until=now";
+    // Aber Comp Sci: 259914077434319
+    // ACOG: 121786034551902
+    var acs = "/121786034551902/feed?limit=5000&since=3%20days%20ago&until=now";
     var app_options = {
         "scope": "user_groups"
     };
